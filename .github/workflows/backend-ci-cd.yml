@@ -1,0 +1,86 @@
+name: Dashboard Backend CI/CD
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: personal-dashboard-backend  # Updated to match Terraform
+  K8S_NAMESPACE: personal-dashboard
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+
+    - name: Install dependencies
+      run: npm ci
+      working-directory: ./backend
+
+    - name: Run tests
+      run: npm test
+      working-directory: ./backend
+
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        cd backend
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+    - name: Update Kubernetes deployment
+      run: |
+        aws eks update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+        sed -i "s|<AWS_ACCOUNT_ID>|${{ secrets.AWS_ACCOUNT_ID }}|g" k8s/backend-deployment.yaml
+        sed -i "s|<REGION>|${{ env.AWS_REGION }}|g" k8s/backend-deployment.yaml
+        kubectl apply -f k8s/namespace.yaml
+        kubectl apply -f k8s/backend-deployment.yaml
+        kubectl rollout status deployment/dashboard-backend -n ${{ env.K8S_NAMESPACE }}
+
+    - name: Run smoke test
+      run: |
+        sleep 30
+        kubectl wait --for=condition=ready pod -l app=dashboard-backend -n ${{ env.K8S_NAMESPACE }} --timeout=120s
+        POD_NAME=$(kubectl get pods -n ${{ env.K8S_NAMESPACE }} -l app=dashboard-backend -o jsonpath='{.items[0].metadata.name}')
+        kubectl exec -n ${{ env.K8S_NAMESPACE }} $POD_NAME -- curl -f http://localhost:8080/api/health || exit 1
