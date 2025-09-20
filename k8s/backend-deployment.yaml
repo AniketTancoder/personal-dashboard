@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: dashboard-backend
-        image: <YOUR_ECR_BACKEND_URL>:latest  # Replace with your ECR backend URL
+        image: 339712892906.dkr.ecr.us-east-1.amazonaws.com/personal-dashboard-backend:latest  # Replace with your ECR backend URL
         ports:
         - containerPort: 8080
         env:
