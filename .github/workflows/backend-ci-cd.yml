@@ -12,7 +12,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPOSITORY: personal-dashboard-backend  # Updated to match Terraform
+  ECR_REPOSITORY: personal-dashboard-backend
   K8S_NAMESPACE: personal-dashboard
 
 jobs:
@@ -67,20 +67,32 @@ jobs:
         cd backend
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
 
     - name: Update Kubernetes deployment
       run: |
+        # Configure kubectl
         aws eks update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+        
+        # Replace placeholders in deployment file
         sed -i "s|<AWS_ACCOUNT_ID>|${{ secrets.AWS_ACCOUNT_ID }}|g" k8s/backend-deployment.yaml
         sed -i "s|<REGION>|${{ env.AWS_REGION }}|g" k8s/backend-deployment.yaml
-        kubectl apply -f k8s/namespace.yaml
+        
+        # Apply Kubernetes manifests
+        kubectl apply -f k8s/namespace.yaml || echo "Namespace may already exist"
         kubectl apply -f k8s/backend-deployment.yaml
-        kubectl rollout status deployment/dashboard-backend -n ${{ env.K8S_NAMESPACE }}
+        
+        # Wait for rollout to complete
+        kubectl rollout status deployment/dashboard-backend -n ${{ env.K8S_NAMESPACE }} --timeout=300s
 
     - name: Run smoke test
       run: |
+        # Wait for pods to be ready
         sleep 30
         kubectl wait --for=condition=ready pod -l app=dashboard-backend -n ${{ env.K8S_NAMESPACE }} --timeout=120s
+        
+        # Test the health endpoint
         POD_NAME=$(kubectl get pods -n ${{ env.K8S_NAMESPACE }} -l app=dashboard-backend -o jsonpath='{.items[0].metadata.name}')
         kubectl exec -n ${{ env.K8S_NAMESPACE }} $POD_NAME -- curl -f http://localhost:8080/api/health || exit 1
+        
+        echo "Smoke test passed successfully!"

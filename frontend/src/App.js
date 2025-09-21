@@ -4,6 +4,7 @@ import Clock from './components/Clock';
 import Weather from './components/Weather';
 import TodoList from './components/TodoList';
 import NewsFeed from './components/NewsFeed';
+import Footer from './components/Footer';
 
 function App() {
   const [currentView, setCurrentView] = useState('dashboard');
@@ -83,6 +84,9 @@ function App() {
           </div>
         )}
       </main>
+
+      <Footer />
+      
     </div>
   );
 }

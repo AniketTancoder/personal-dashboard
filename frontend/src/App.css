@@ -224,3 +224,16 @@ body {
   max-width: 800px;
   margin: 0 auto;
 }
+
+
+
+/* Ensure footer stays at bottom */
+.App {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.dashboard-container {
+  flex: 1;
+}

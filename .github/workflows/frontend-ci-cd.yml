@@ -12,7 +12,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPOSITORY: personal-dashboard-frontend  # Updated to match Terraform
+  ECR_REPOSITORY: personal-dashboard-frontend  # Matches Terraform
   K8S_NAMESPACE: personal-dashboard
 
 jobs:
@@ -78,13 +78,20 @@ jobs:
         cd frontend
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
 
     - name: Update Kubernetes deployment
       run: |
+        # Configure kubectl
         aws eks update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+        
+        # Replace placeholders in deployment file
         sed -i "s|<AWS_ACCOUNT_ID>|${{ secrets.AWS_ACCOUNT_ID }}|g" k8s/frontend-deployment.yaml
         sed -i "s|<REGION>|${{ env.AWS_REGION }}|g" k8s/frontend-deployment.yaml
-        kubectl apply -f k8s/namespace.yaml
+        
+        # Apply Kubernetes manifests
+        kubectl apply -f k8s/namespace.yaml || echo "Namespace may already exist"
         kubectl apply -f k8s/frontend-deployment.yaml
-        kubectl rollout status deployment/dashboard-frontend -n ${{ env.K8S_NAMESPACE }}
+        
+        # Wait for rollout to complete
+        kubectl rollout status deployment/dashboard-frontend -n ${{ env.K8S_NAMESPACE }} --timeout=300s
