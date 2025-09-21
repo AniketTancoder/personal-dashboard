@@ -39,7 +39,7 @@ app.get('/api/weather', (req, res) => {
   // Simulate network delay
   setTimeout(() => {
     res.json(weatherData);
-  }, 500);
+  }, 100); // Reduced delay for tests
 });
 
 // News endpoint (mock data)
@@ -57,12 +57,6 @@ app.get('/api/news', (req, res) => {
         description: "World leaders gather to discuss urgent actions needed to combat climate change.",
         url: "#",
         publishedAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        title: "Tech Giant Announces Revolutionary New Product",
-        description: "The latest innovation promises to change how we interact with technology daily.",
-        url: "#",
-        publishedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
       }
     ]
   };
@@ -70,7 +64,7 @@ app.get('/api/news', (req, res) => {
   // Simulate network delay
   setTimeout(() => {
     res.json(newsData);
-  }, 800);
+  }, 100); // Reduced delay for tests
 });
 
 // Todos endpoints
@@ -143,8 +137,12 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-app.listen(port, () => {
-  console.log(`Dashboard backend running on port ${port}`);
-});
+// Start server only if not in test environment
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(port, () => {
+    console.log(`Dashboard backend running on port ${port}`);
+  });
+}
 
+// Export the app for testing
 module.exports = app;
