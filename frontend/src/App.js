@@ -6,6 +6,8 @@ import TodoList from './components/TodoList';
 import NewsFeed from './components/NewsFeed';
 import Footer from './components/Footer';
 
+// Personal Dashboard - Built with React and deployed via CI/CD
+
 function App() {
   const [currentView, setCurrentView] = useState('dashboard');
   const [isLoading, setIsLoading] = useState(true);
@@ -86,7 +88,7 @@ function App() {
       </main>
 
       <Footer />
-      
+
     </div>
   );
 }
