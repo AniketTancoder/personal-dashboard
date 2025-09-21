@@ -53,13 +53,22 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '16'
+        node-version: '18'  # Change from '16' to '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
 
-    - name: Install dependencies and build
+    - name: Install dependencies
       run: |
         cd frontend
-        npm ci
-        npm run build
+        # Remove node_modules and package-lock.json to start fresh
+        rm -rf node_modules
+        rm -f package-lock.json
+        # Install dependencies
+        npm install
+      # Alternatively, use this approach:
+      # run: |
+      #   cd frontend
+      #   npm ci --no-audit --no-fund || npm install --no-audit --no-fund
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
