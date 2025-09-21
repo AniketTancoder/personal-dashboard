@@ -18,6 +18,8 @@ spec:
       containers:
       - name: dashboard-frontend
         image: 339712892906.dkr.ecr.us-east-1.amazonaws.com/personal-dashboard-frontend:latest  # Replace with your ECR frontend URL
+        imagePullPolicy: Always
+        
         ports:
         - containerPort: 3000
         resources:
