@@ -35,7 +35,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1 className="app-title">Personal Dashboard 3</h1>
+        <h1 className="app-title">Personal Dashboard</h1>
         <nav className="app-nav">
           <button 
             className={currentView === 'dashboard' ? 'nav-btn active' : 'nav-btn'}
