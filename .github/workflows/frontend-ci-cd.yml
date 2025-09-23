@@ -2,13 +2,12 @@ name: Dashboard Frontend CI/CD
 
 on:
   push:
-    branches: [ main ]
-    paths:
-      - 'frontend/**'
+    branches: [ main, master ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, master ]
     paths:
       - 'frontend/**'
+  workflow_dispatch:
 
 env:
   AWS_REGION: us-east-1
