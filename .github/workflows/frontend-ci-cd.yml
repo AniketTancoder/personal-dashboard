@@ -38,8 +38,6 @@ jobs:
     - name: Run tests
       run: npm test
       working-directory: ./frontend
-      # Continue even if tests fail (for now)
-      continue-on-error: true
 
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -105,6 +103,7 @@ jobs:
         # Replace placeholders in deployment file
         sed -i "s|<AWS_ACCOUNT_ID>|${{ secrets.AWS_ACCOUNT_ID }}|g" k8s/frontend-deployment.yaml
         sed -i "s|<REGION>|${{ env.AWS_REGION }}|g" k8s/frontend-deployment.yaml
+        sed -i "s|<IMAGE_TAG>|${{ github.sha }}|g" k8s/frontend-deployment.yaml
         
         # Apply Kubernetes manifests
         kubectl apply -f k8s/namespace.yaml || echo "Namespace may already exist"
