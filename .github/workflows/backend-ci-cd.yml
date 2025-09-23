@@ -86,7 +86,10 @@ jobs:
         # Apply Kubernetes manifests
         kubectl apply -f k8s/namespace.yaml || echo "Namespace may already exist"
         kubectl apply -f k8s/backend-deployment.yaml
-        
+
+        # Force rollout restart to pull new image
+        kubectl rollout restart deployment/dashboard-backend -n ${{ env.K8S_NAMESPACE }}
+
         # Wait for rollout to complete
         kubectl rollout status deployment/dashboard-backend -n ${{ env.K8S_NAMESPACE }} --timeout=300s
 
