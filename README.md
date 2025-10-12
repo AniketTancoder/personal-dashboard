@@ -11,7 +11,11 @@ A full-stack personal dashboard application featuring a React frontend and Node.
 - **Responsive Design**: Works on desktop and mobile devices
 
 ## Project URL(AWS Deployment): 
+<<<<<<< HEAD
 a852ccb63580d4fd28e765900eeb1069-1549834109.us-east-1.elb.amazonaws.com
+=======
+http://a852ccb63580d4fd28e765900eeb1069-1549834109.us-east-1.elb.amazonaws.com
+>>>>>>> d56156a6b141f29af8e76bde529b2f9c7b6fc926
 
 ## 🛠 Tech Stack
 
@@ -34,6 +38,7 @@ a852ccb63580d4fd28e765900eeb1069-1549834109.us-east-1.elb.amazonaws.com
 - GitHub Actions (CI/CD)
 - Terraform (IaC)
 
+<<<<<<< HEAD
 ## 📁 Project Structure
 
 ```
@@ -53,6 +58,8 @@ a852ccb63580d4fd28e765900eeb1069-1549834109.us-east-1.elb.amazonaws.com
 └── README.md
 ```
 
+=======
+>>>>>>> d56156a6b141f29af8e76bde529b2f9c7b6fc926
 ## 📋 Prerequisites
 
 - Node.js 16+
@@ -171,6 +178,7 @@ DELETE /api/todos/:id
 GET /api/news
 Response: Mock news articles
 ```
+<<<<<<< HEAD
 
 ## 📄 License
 
@@ -179,3 +187,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 📞 Support
 
 For questions or issues, please open a GitHub issue or contact the maintainers.
+=======
+>>>>>>> d56156a6b141f29af8e76bde529b2f9c7b6fc926
