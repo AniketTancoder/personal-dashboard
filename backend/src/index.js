@@ -39,7 +39,7 @@ app.get('/api/weather', (req, res) => {
   // Simulate network delay
   setTimeout(() => {
     res.json(weatherData);
-  }, 100); // Reduced delay for tests
+  }, 100);
 });
 
 // News endpoint (mock data)
@@ -57,14 +57,19 @@ app.get('/api/news', (req, res) => {
         description: "World leaders gather to discuss urgent actions needed to combat climate change.",
         url: "#",
         publishedAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        title: "Tech Giant Announces Revolutionary New Product",
+        description: "The latest innovation promises to change how we interact with technology daily.",
+        url: "#",
+        publishedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
       }
     ]
   };
   
-  // Simulate network delay
   setTimeout(() => {
     res.json(newsData);
-  }, 100); // Reduced delay for tests
+  }, 100);
 });
 
 // Todos endpoints

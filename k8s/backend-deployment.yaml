@@ -18,7 +18,6 @@ spec:
       containers:
       - name: dashboard-backend
         image: 339712892906.dkr.ecr.us-east-1.amazonaws.com/personal-dashboard-backend:latest
-        imagePullPolicy: Always
         ports:
         - containerPort: 8080
         env:

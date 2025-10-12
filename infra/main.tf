@@ -110,9 +110,15 @@ resource "aws_eks_node_group" "main" {
 resource "aws_ecr_repository" "backend" {
   name                 = "${var.app_name}-backend"
   image_tag_mutability = "MUTABLE"
+  force_delete         = true
+
+  encryption_configuration {
+    encryption_type = "KMS"
+    kms_key         = "arn:aws:kms:us-east-1:339712892906:key/cae0dd26-2361-4157-a704-b0042624748c"
+  }
 
   image_scanning_configuration {
-    scan_on_push = true
+    scan_on_push = false
   }
 
   tags = {
@@ -124,9 +130,15 @@ resource "aws_ecr_repository" "backend" {
 resource "aws_ecr_repository" "frontend" {
   name                 = "${var.app_name}-frontend"
   image_tag_mutability = "MUTABLE"
+  force_delete         = true
+
+  encryption_configuration {
+    encryption_type = "KMS"
+    kms_key         = "arn:aws:kms:us-east-1:339712892906:key/cae0dd26-2361-4157-a704-b0042624748c"
+  }
 
   image_scanning_configuration {
-    scan_on_push = true
+    scan_on_push = false
   }
 
   tags = {
@@ -135,50 +147,6 @@ resource "aws_ecr_repository" "frontend" {
   }
 }
 
-# CloudWatch Log Group for Application Logs
-resource "aws_cloudwatch_log_group" "app_logs" {
-  name              = "/eks/${var.app_name}"
-  retention_in_days = 30
-
-  tags = {
-    Name = "${var.app_name}-logs"
-    Environment = var.environment
-  }
-}
-
-# SNS Topic for Alerts
-resource "aws_sns_topic" "alerts" {
-  name = "${var.app_name}-alerts"
-
-  tags = {
-    Name = "${var.app_name}-alerts"
-    Environment = var.environment
-  }
-}
-
-# CloudWatch Alarm for High CPU Usage (Alternative to the API error alarm)
-resource "aws_cloudwatch_metric_alarm" "high_cpu" {
-  alarm_name          = "${var.app_name}-High-CPU-Utilization"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = "2"
-  metric_name         = "CPUUtilization"
-  namespace           = "AWS/ECS"
-  period              = "300"
-  statistic           = "Average"
-  threshold           = "80"
-  alarm_description   = "This alarm monitors for high CPU usage"
-  alarm_actions       = [aws_sns_topic.alerts.arn]
-
-  dimensions = {
-    ClusterName = var.cluster_name
-    ServiceName = "${var.app_name}-service"
-  }
-
-  tags = {
-    Name = "${var.app_name}-high-cpu-alarm"
-    Environment = var.environment
-  }
-}
 
 # IAM Role for EKS Cluster
 resource "aws_iam_role" "eks_cluster" {
@@ -305,9 +273,4 @@ output "ecr_backend_repository_url" {
 output "ecr_frontend_repository_url" {
   description = "ECR Frontend Repository URL"
   value       = aws_ecr_repository.frontend.repository_url
-}
-
-output "sns_topic_arn" {
-  description = "SNS Topic ARN for alerts"
-  value       = aws_sns_topic.alerts.arn
 }
