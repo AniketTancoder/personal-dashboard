@@ -6,9 +6,34 @@ const morgan = require('morgan');
 const app = express();
 const port = process.env.PORT || 8080;
 
-// Enhanced CORS configuration for development
+// Enhanced CORS configuration for development and production
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://frontend-service:3000'],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://frontend-service:3000',
+      /^https:\/\/.*\.netlify\.app$/, // Allow all Netlify domains
+      /^https:\/\/.*\.netlify\.dev$/  // Allow Netlify dev domains
+    ];
+
+    const isAllowed = allowedOrigins.some(allowedOrigin => {
+      if (typeof allowedOrigin === 'string') {
+        return allowedOrigin === origin;
+      } else if (allowedOrigin instanceof RegExp) {
+        return allowedOrigin.test(origin);
+      }
+      return false;
+    });
+
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 
