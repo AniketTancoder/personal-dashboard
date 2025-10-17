@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Widget.css';
+import { API_URL } from '../config';
 
 const Weather = () => {
   const [weather, setWeather] = useState(null);
@@ -9,7 +10,7 @@ const Weather = () => {
   useEffect(() => {
     const fetchWeather = async () => {
       try {
-        const response = await fetch('/api/weather');
+        const response = await fetch(`${API_URL}/api/weather`);
         if (!response.ok) {
           throw new Error('Weather API not available');
         }

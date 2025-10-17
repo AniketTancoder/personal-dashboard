@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Widget.css';
+import { API_URL } from '../config';
 
 const TodoList = ({ preview }) => {
   const [todos, setTodos] = useState([]);
@@ -13,12 +14,12 @@ const TodoList = ({ preview }) => {
 
   const fetchTodos = async () => {
     try {
-      const response = await fetch('/api/todos');
+      const response = await fetch(`${API_URL}/api/todos`);
       if (!response.ok) {
         throw new Error('Failed to fetch todos');
       }
       const data = await response.json();
-      setTodos(data);
+      setTodos(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Todo fetch error:', err);
       // Fallback to mock data
@@ -38,7 +39,7 @@ const TodoList = ({ preview }) => {
   const addTodo = async () => {
     if (newTodo.trim()) {
       try {
-        const response = await fetch('/api/todos', {
+        const response = await fetch(`${API_URL}/api/todos`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -73,7 +74,7 @@ const TodoList = ({ preview }) => {
   const toggleTodo = async (id) => {
     const todo = todos.find(t => t.id === id);
     try {
-      const response = await fetch(`/api/todos/${id}`, {
+      const response = await fetch(`${API_URL}/api/todos/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -100,7 +101,7 @@ const TodoList = ({ preview }) => {
 
   const deleteTodo = async (id) => {
     try {
-      const response = await fetch(`/api/todos/${id}`, {
+      const response = await fetch(`${API_URL}/api/todos/${id}`, {
         method: 'DELETE',
       });
 
@@ -116,7 +117,7 @@ const TodoList = ({ preview }) => {
     }
   };
 
-  const displayedTodos = preview ? todos.slice(0, 4) : todos;
+  const displayedTodos = preview ? (Array.isArray(todos) ? todos.slice(0, 4) : []) : todos;
 
   return (
     <div className={`widget ${preview ? 'preview' : ''}`}>

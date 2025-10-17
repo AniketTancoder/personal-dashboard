@@ -5,6 +5,7 @@ import Weather from './components/Weather';
 import TodoList from './components/TodoList';
 import NewsFeed from './components/NewsFeed';
 import Footer from './components/Footer';
+import { API_URL } from './config';
 
 function App() {
   const [currentView, setCurrentView] = useState('dashboard');
@@ -15,7 +16,7 @@ function App() {
     // Check backend health
     const checkBackend = async () => {
       try {
-        const response = await fetch('/api/health');
+        const response = await fetch(`${API_URL}/api/health`);
         if (response.ok) {
           setBackendStatus('connected');
         } else {
