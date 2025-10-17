@@ -6,89 +6,121 @@ const morgan = require('morgan');
 const app = express();
 const port = process.env.PORT || 8080;
 
-// Middleware
+// Enhanced CORS configuration for development
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://frontend-service:3000'],
+  credentials: true
+}));
+
 app.use(helmet());
-app.use(cors());
-app.use(morgan('combined'));
+app.use(morgan('dev'));
 app.use(express.json());
 
 // In-memory storage for todos
 let todos = [];
 let nextId = 1;
 
-// Routes
+// Enhanced health endpoint
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
-    service: 'Personal Dashboard API'
+    service: 'Personal Dashboard API',
+    environment: process.env.NODE_ENV || 'development',
+    version: '1.0.0'
   });
 });
 
-// Weather endpoint (mock data)
+// Weather endpoint with enhanced mock data
 app.get('/api/weather', (req, res) => {
+  const descriptions = ["Sunny", "Cloudy", "Partly Cloudy", "Rainy", "Snowy"];
+  const icons = ["☀️", "☁️", "⛅", "🌧️", "❄️"];
+  const randomIndex = Math.floor(Math.random() * descriptions.length);
+  
   const weatherData = {
     temp: Math.floor(Math.random() * 30) + 10,
     humidity: Math.floor(Math.random() * 50) + 30,
     wind: Math.floor(Math.random() * 20) + 5,
-    description: ["Sunny", "Cloudy", "Partly Cloudy", "Rainy"][Math.floor(Math.random() * 4)],
-    icon: "☀️",
-    city: "New York"
+    description: descriptions[randomIndex],
+    icon: icons[randomIndex],
+    city: "Local City",
+    updatedAt: new Date().toISOString()
   };
   
-  // Simulate network delay
+  // Simulate network delay only in development
+  const delay = process.env.NODE_ENV === 'development' ? 100 : 0;
   setTimeout(() => {
     res.json(weatherData);
-  }, 100);
+  }, delay);
 });
 
-// News endpoint (mock data)
+// Enhanced news endpoint
 app.get('/api/news', (req, res) => {
   const newsData = {
     articles: [
       {
+        id: 1,
         title: "New AI Breakthrough Revolutionizes Healthcare",
         description: "Researchers have developed an AI system that can detect diseases with unprecedented accuracy.",
+        content: "The new AI system uses advanced machine learning algorithms to analyze medical images and patient data...",
         url: "#",
-        publishedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+        publishedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        source: "Tech News"
       },
       {
+        id: 2,
         title: "Global Summit Addresses Climate Change Solutions",
         description: "World leaders gather to discuss urgent actions needed to combat climate change.",
+        content: "The international climate summit brought together representatives from over 100 countries...",
         url: "#",
-        publishedAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString()
+        publishedAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+        source: "Environmental Times"
       },
       {
-        title: "Tech Giant Announces Revolutionary New Product",
-        description: "The latest innovation promises to change how we interact with technology daily.",
+        id: 3,
+        title: "Space Exploration Reaches New Milestone",
+        description: "Recent mission discoveries provide new insights into our solar system.",
+        content: "The latest space mission has successfully collected data from the outer reaches of our solar system...",
         url: "#",
-        publishedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+        publishedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+        source: "Space Daily"
       }
-    ]
+    ],
+    total: 3,
+    updatedAt: new Date().toISOString()
   };
   
+  const delay = process.env.NODE_ENV === 'development' ? 100 : 0;
   setTimeout(() => {
     res.json(newsData);
-  }, 100);
+  }, delay);
 });
 
-// Todos endpoints
+// Enhanced todos endpoints with validation
 app.get('/api/todos', (req, res) => {
-  res.json(todos);
+  res.json({
+    todos: todos,
+    total: todos.length,
+    completed: todos.filter(t => t.completed).length
+  });
 });
 
 app.post('/api/todos', (req, res) => {
   const { text, completed = false } = req.body;
   
-  if (!text || typeof text !== 'string') {
-    return res.status(400).json({ error: 'Valid text is required' });
+  if (!text || typeof text !== 'string' || text.trim().length === 0) {
+    return res.status(400).json({ 
+      error: 'Valid text is required',
+      details: 'Text must be a non-empty string'
+    });
   }
   
   const newTodo = {
     id: nextId++,
     text: text.trim(),
     completed: Boolean(completed),
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
   
   todos.push(newTodo);
@@ -102,12 +134,18 @@ app.put('/api/todos/:id', (req, res) => {
   const todoIndex = todos.findIndex(todo => todo.id === id);
   
   if (todoIndex === -1) {
-    return res.status(404).json({ error: 'Todo not found' });
+    return res.status(404).json({ 
+      error: 'Todo not found',
+      details: `Todo with id ${id} does not exist`
+    });
   }
   
   if (text !== undefined) {
-    if (typeof text !== 'string' || !text.trim()) {
-      return res.status(400).json({ error: 'Valid text is required' });
+    if (typeof text !== 'string' || text.trim().length === 0) {
+      return res.status(400).json({ 
+        error: 'Valid text is required',
+        details: 'Text must be a non-empty string'
+      });
     }
     todos[todoIndex].text = text.trim();
   }
@@ -115,6 +153,8 @@ app.put('/api/todos/:id', (req, res) => {
   if (completed !== undefined) {
     todos[todoIndex].completed = Boolean(completed);
   }
+  
+  todos[todoIndex].updatedAt = new Date().toISOString();
   
   res.json(todos[todoIndex]);
 });
@@ -124,30 +164,84 @@ app.delete('/api/todos/:id', (req, res) => {
   const todoIndex = todos.findIndex(todo => todo.id === id);
   
   if (todoIndex === -1) {
-    return res.status(404).json({ error: 'Todo not found' });
+    return res.status(404).json({ 
+      error: 'Todo not found',
+      details: `Todo with id ${id} does not exist`
+    });
   }
   
-  todos.splice(todoIndex, 1);
-  res.status(204).send();
+  const deletedTodo = todos.splice(todoIndex, 1)[0];
+  res.json({ 
+    message: 'Todo deleted successfully',
+    deletedTodo 
+  });
+});
+
+// New endpoint to clear all todos (for testing)
+app.delete('/api/todos', (req, res) => {
+  const count = todos.length;
+  todos = [];
+  nextId = 1;
+  res.json({ 
+    message: 'All todos cleared successfully',
+    deletedCount: count 
+  });
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
+  console.error('Error stack:', err.stack);
+  res.status(500).json({ 
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong!'
+  });
 });
 
 // 404 handler
 app.use('*', (req, res) => {
-  res.status(404).json({ error: 'Route not found' });
+  res.status(404).json({ 
+    error: 'Route not found',
+    path: req.originalUrl,
+    availableEndpoints: [
+      'GET /api/health',
+      'GET /api/weather',
+      'GET /api/news',
+      'GET /api/todos',
+      'POST /api/todos',
+      'PUT /api/todos/:id',
+      'DELETE /api/todos/:id'
+    ]
+  });
 });
 
-// Start server only if not in test environment
+// Graceful shutdown handling
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully');
+  process.exit(0);
+});
+
+// Start server
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(port, () => {
-    console.log(`Dashboard backend running on port ${port}`);
+  const server = app.listen(port, '0.0.0.0', () => {
+    console.log(`🚀 Dashboard backend running on port ${port}`);
+    console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🔗 Health check: http://localhost:${port}/api/health`);
+  });
+
+  // Handle server errors
+  server.on('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+      console.error(`Port ${port} is already in use`);
+      process.exit(1);
+    } else {
+      throw error;
+    }
   });
 }
 
-// Export the app for testing
 module.exports = app;

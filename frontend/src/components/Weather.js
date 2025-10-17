@@ -9,21 +9,25 @@ const Weather = () => {
   useEffect(() => {
     const fetchWeather = async () => {
       try {
-        // Simulate API call with mock data
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
+        const response = await fetch('/api/weather');
+        if (!response.ok) {
+          throw new Error('Weather API not available');
+        }
+        const data = await response.json();
+        setWeather(data);
+      } catch (err) {
+        console.error('Weather fetch error:', err);
+        // Fallback to mock data if backend is not available
         const mockWeatherData = {
-          temp: Math.floor(Math.random() * 30) + 10, // Random temp between 10-40°C
-          humidity: Math.floor(Math.random() * 50) + 30, // Random humidity between 30-80%
-          wind: Math.floor(Math.random() * 20) + 5, // Random wind between 5-25 km/h
+          temp: Math.floor(Math.random() * 30) + 10,
+          humidity: Math.floor(Math.random() * 50) + 30,
+          wind: Math.floor(Math.random() * 20) + 5,
           description: ["Sunny", "Cloudy", "Partly Cloudy", "Rainy"][Math.floor(Math.random() * 4)],
           icon: "☀️",
-          city: "New York"
+          city: "Local"
         };
-        
         setWeather(mockWeatherData);
-      } catch (err) {
-        setError('Unable to fetch weather data');
+        setError('Using mock data - Backend unavailable');
       } finally {
         setLoading(false);
       }
@@ -37,15 +41,16 @@ const Weather = () => {
   }, []);
 
   if (loading) return <div className="widget loading">Loading weather...</div>;
-  if (error) return <div className="widget error">Error: {error}</div>;
 
   return (
     <div className="widget">
       <div className="widget-header">
         <span className="widget-icon">🌤️</span>
         <h2>Weather</h2>
+        {error && <span className="error-badge">Mock</span>}
       </div>
       <div className="widget-content">
+        {error && <div className="warning-message">{error}</div>}
         <div className="weather-info">
           <div className="weather-main">
             <div className="weather-temp">{weather.temp}°C</div>

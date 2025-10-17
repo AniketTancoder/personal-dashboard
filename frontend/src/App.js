@@ -6,15 +6,29 @@ import TodoList from './components/TodoList';
 import NewsFeed from './components/NewsFeed';
 import Footer from './components/Footer';
 
-// Personal Dashboard - Built with React and deployed via CI/CD
-
-// Personal Dashboard v1.0.2 - CI/CD Fixed
-
 function App() {
   const [currentView, setCurrentView] = useState('dashboard');
   const [isLoading, setIsLoading] = useState(true);
+  const [backendStatus, setBackendStatus] = useState('checking');
 
   useEffect(() => {
+    // Check backend health
+    const checkBackend = async () => {
+      try {
+        const response = await fetch('/api/health');
+        if (response.ok) {
+          setBackendStatus('connected');
+        } else {
+          setBackendStatus('error');
+        }
+      } catch (error) {
+        setBackendStatus('error');
+        console.error('Backend connection failed:', error);
+      }
+    };
+
+    checkBackend();
+
     // Simulate initial loading
     const timer = setTimeout(() => {
       setIsLoading(false);
@@ -28,6 +42,7 @@ function App() {
       <div className="app-loading">
         <div className="loading-spinner"></div>
         <h2>Loading Dashboard...</h2>
+        <p>Backend status: {backendStatus}</p>
       </div>
     );
   }
@@ -36,6 +51,9 @@ function App() {
     <div className="App">
       <header className="App-header">
         <h1 className="app-title">Personal Dashboard</h1>
+        <div className="backend-status">
+          Backend: <span className={`status-${backendStatus}`}>{backendStatus}</span>
+        </div>
         <nav className="app-nav">
           <button 
             className={currentView === 'dashboard' ? 'nav-btn active' : 'nav-btn'}
@@ -90,7 +108,6 @@ function App() {
       </main>
 
       <Footer />
-
     </div>
   );
 }

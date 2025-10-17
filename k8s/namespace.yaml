@@ -4,3 +4,4 @@ metadata:
   name: personal-dashboard
   labels:
     name: personal-dashboard
+    environment: development
